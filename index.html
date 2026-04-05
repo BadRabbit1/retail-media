@@ -1,929 +1,919 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retail Media · Kasta</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-:root{
-  --bg:#0f0f0f;--bg2:#181818;--bg3:#222;--bg4:#2a2a2a;
-  --border:#2e2e2e;--border2:#3a3a3a;
-  --text:#f0ede8;--text2:#9a9690;--text3:#5a5754;
-  --green:#3ddc84;--green-bg:rgba(61,220,132,.1);--green-border:rgba(61,220,132,.25);
-  --amber:#f5a623;--amber-bg:rgba(245,166,35,.1);--amber-border:rgba(245,166,35,.25);
-  --red:#ff5b5b;--red-bg:rgba(255,91,91,.1);--red-border:rgba(255,91,91,.2);
-  --blue:#4da6ff;--blue-bg:rgba(77,166,255,.1);
-  --violet:#b47fff;--violet-bg:rgba(180,127,255,.1);
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
-  --r:8px;--rl:12px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
-a{color:var(--blue);text-decoration:none}
-code{font-family:var(--mono);font-size:12px;background:var(--bg3);padding:1px 6px;border-radius:4px}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Media Analytics · Kasta</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
-/* ── layout ── */
-.shell{max-width:940px;margin:0 auto;padding:28px 20px 80px}
-.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
-.logo{font-family:var(--mono);font-size:13px;color:var(--text3);letter-spacing:.08em}
-.logo strong{color:var(--green);font-weight:500}
-.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+        :root {
+            --bg: #0f0f0f; --bg2: #181818; --bg3: #222; --bg4: #2a2a2a;
+            --border: #2e2e2e; --border2: #3a3a3a;
+            --text: #f0ede8; --text2: #9a9690; --text3: #5a5754;
+            --green: #3ddc84; --green-bg: rgba(61,220,132,.1);
+            --amber: #f5a623; --amber-bg: rgba(245,166,35,.1);
+            --red: #ff5b5b; --red-bg: rgba(255,91,91,.1);
+            --blue: #4da6ff; --blue-bg: rgba(77,166,255,.1);
+            --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+            --r: 8px; --rl: 12px;
+        }
 
-/* ── month badge ── */
-.month-badge{font-family:var(--mono);font-size:12px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:5px 12px;border-radius:var(--r)}
-.updated-at{font-size:11px;color:var(--text3);font-family:var(--mono)}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        
+        /* Layout */
+        .shell { max-width: 1000px; margin: 0 auto; padding: 20px 20px 100px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .logo { font-family: var(--mono); font-weight: 500; letter-spacing: 1px; color: var(--text3); }
+        .logo span { color: var(--green); }
+        
+        /* Components */
+        .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--rl); padding: 16px; margin-bottom: 12px; }
+        .btn { padding: 8px 16px; border-radius: var(--r); border: 0.5px solid var(--border2); background: var(--bg3); color: var(--text); font-family: var(--sans); cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn:hover { background: var(--bg4); border-color: var(--text3); }
+        .btn-primary { background: var(--green-bg); color: var(--green); border-color: rgba(61,220,132,0.3); }
+        
+        /* Summary Bar */
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .sum-item { padding: 16px; border-radius: var(--rl); background: var(--bg2); border: 0.5px solid var(--border); }
+        .sum-label { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; margin-bottom: 4px; }
+        .sum-val { font-size: 24px; font-weight: 600; }
 
-/* ── buttons ── */
-.btn{padding:7px 14px;border-radius:var(--r);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{border-color:var(--border2);background:var(--bg4)}
-.btn-accent{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
-.btn-accent:hover{background:rgba(61,220,132,.15)}
-.btn-sm{padding:5px 10px;font-size:12px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; border-bottom: 0.5px solid var(--border); margin-bottom: 20px; }
+        .tab { padding: 10px 16px; cursor: pointer; color: var(--text3); font-family: var(--mono); font-size: 13px; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab.active { color: var(--green); border-bottom-color: var(--green); }
+        .panel { display: none; }
+        .panel.active { display: block; }
 
-/* ── tabs ── */
-.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:0.5px solid var(--border);padding-bottom:10px;flex-wrap:wrap}
-.tab-btn{padding:6px 16px;border-radius:6px;border:0.5px solid transparent;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--text3);background:transparent;transition:all .15s;letter-spacing:.04em}
-.tab-btn:hover{color:var(--text2);border-color:var(--border)}
-.tab-btn.active{background:var(--bg3);color:var(--green);border-color:var(--border2)}
-.panel{display:none}.panel.active{display:block}
+        /* Rating Cards */
+        .rating-grid { display: grid; gap: 8px; margin-bottom: 24px; }
+        .r-card { display: grid; grid-template-columns: 40px 1fr 100px; align-items: center; gap: 16px; padding: 14px 20px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--rl); }
+        .r-num { font-family: var(--mono); font-size: 18px; color: var(--text3); }
+        .r-num.top { color: var(--green); font-weight: 600; }
+        .r-main { display: flex; flex-direction: column; gap: 4px; }
+        .r-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .r-metrics { display: flex; gap: 16px; flex-wrap: wrap; }
+        .m-item { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+        .m-item b { color: var(--text); }
+        .r-score-wrap { text-align: right; }
+        .r-score { font-size: 22px; font-family: var(--mono); font-weight: 500; color: var(--green); }
+        .r-bar { height: 3px; background: var(--bg3); border-radius: 2px; margin-top: 8px; overflow: hidden; grid-column: 1 / span 3; }
+        .r-fill { height: 100%; background: var(--green); border-radius: 2px; }
 
-/* ── sub-tabs (smaller) ── */
-.sub-tabs{display:flex;gap:4px;margin-bottom:16px}
-.sub-tab{padding:4px 12px;border-radius:6px;border:0.5px solid transparent;font-size:11px;font-family:var(--mono);cursor:pointer;color:var(--text3);background:transparent}
-.sub-tab:hover{color:var(--text2)}
-.sub-tab.active{background:var(--bg3);color:var(--text);border-color:var(--border)}
+        /* Filter */
+        .filter-row { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        select { background: var(--bg3); border: 0.5px solid var(--border2); color: var(--text); padding: 6px 12px; border-radius: var(--r); font-family: var(--sans); outline: none; }
 
-/* ── section label ── */
-.section-label{font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+        /* Tables */
+        .table-wrap { overflow-x: auto; border-radius: var(--rl); border: 0.5px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: var(--bg2); font-size: 12px; }
+        th { background: var(--bg3); padding: 10px 12px; text-align: left; font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 10px 12px; border-top: 0.5px solid var(--border); color: var(--text2); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .text-white { color: var(--text); font-weight: 500; }
+        .sub-row { background: rgba(255,255,255,0.01); font-size: 11px; }
 
-/* ── rank cards ── */
-.rank-card{display:grid;grid-template-columns:30px 1fr 68px;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--rl);border:0.5px solid var(--border);background:var(--bg2);margin-bottom:7px}
-.rank-card:hover{border-color:var(--border2)}
-.rank-num{font-family:var(--mono);font-size:17px;font-weight:500;text-align:center;color:var(--text3)}
-.rank-num.g{color:var(--green)}
-.rank-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.rank-metrics{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
-.rm{font-size:11px;color:var(--text2)}.rm strong{color:var(--text);font-weight:500}
-.score-bg{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
-.score-fill{height:3px;border-radius:2px}
-.rank-score{font-size:21px;font-family:var(--mono);font-weight:500;text-align:right}
-.rank-score-sub{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:right}
+        /* Pills */
+        .pill { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-family: var(--mono); font-weight: 500; text-transform: uppercase; }
+        .pill-top { background: var(--green-bg); color: var(--green); }
+        .pill-mid { background: var(--amber-bg); color: var(--amber); }
+        .pill-low { background: var(--red-bg); color: var(--red); }
 
-/* ── pills ── */
-.pill{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-family:var(--mono);font-weight:500}
-.pg{background:var(--green-bg);color:var(--green)}
-.pa{background:var(--amber-bg);color:var(--amber)}
-.pr{background:var(--red-bg);color:var(--red)}
-.pb{background:var(--blue-bg);color:var(--blue)}
-.pv{background:var(--violet-bg);color:var(--violet)}
-.pgr{background:var(--bg3);color:var(--text3);border:0.5px solid var(--border)}
+        /* Calculator */
+        .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 768px) { .calc-grid { grid-template-columns: 1fr; } }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 11px; font-family: var(--mono); color: var(--text3); margin-bottom: 6px; text-transform: uppercase; }
+        .range-wrap { display: flex; align-items: center; gap: 12px; }
+        input[type="range"] { flex: 1; accent-color: var(--green); }
+        .check-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; font-size: 13px; }
+        .res-card { background: var(--bg3); border-radius: var(--rl); padding: 20px; }
+        .res-title { font-family: var(--mono); font-size: 12px; margin-bottom: 16px; color: var(--text2); text-align: center; }
+        .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .res-box { text-align: center; }
+        .res-label { font-size: 10px; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; }
+        .res-val { font-size: 20px; font-weight: 600; color: var(--text); }
+        .res-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+        .synergy-badge { display: inline-block; margin-top: 12px; padding: 4px 10px; background: var(--blue-bg); color: var(--blue); border-radius: 4px; font-size: 11px; width: 100%; text-align: center; }
 
-/* ── tables ── */
-.tbl-wrap{overflow-x:auto}
-.dt{width:100%;border-collapse:collapse;font-size:12px}
-.dt th{font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-bottom:0.5px solid var(--border);text-align:right;font-weight:500;white-space:nowrap}
-.dt th.tl{text-align:left}
-.dt td{padding:7px 8px;border-bottom:0.5px solid var(--border);text-align:right;color:var(--text2);white-space:nowrap}
-.dt td.tl{text-align:left;color:var(--text);font-weight:500}
-.dt td.mono{font-family:var(--mono)}
-.dt tr:last-child td{border-bottom:none}
-.dt tr:hover td{background:rgba(255,255,255,.02)}
-.dt tr.sub-row td{background:rgba(255,255,255,.02);font-size:11px}
-.dt tr.sub-row td.tl{color:var(--text2);padding-left:24px;font-weight:400}
+        /* Admin Modal */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+        .overlay.active { display: flex; }
+        .modal { background: var(--bg2); border: 0.5px solid var(--border2); width: 100%; max-width: 500px; border-radius: var(--rl); padding: 28px; }
+        .modal-h { font-size: 20px; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .input-text { width: 100%; background: var(--bg3); border: 0.5px solid var(--border); padding: 10px 14px; border-radius: var(--r); color: var(--text); outline: none; margin-bottom: 12px; }
+        .file-slot { border: 1px dashed var(--border2); padding: 16px; border-radius: var(--r); text-align: center; cursor: pointer; margin-bottom: 8px; transition: 0.2s; position: relative; }
+        .file-slot:hover { border-color: var(--green); background: var(--green-bg); }
+        .file-slot input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .file-name { font-size: 12px; color: var(--text3); margin-top: 4px; }
+        .file-slot.ok { border-style: solid; border-color: var(--green); }
+        .file-slot.ok .file-name { color: var(--green); }
 
-/* ── cards ── */
-.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rl);padding:16px}
-.card+.card{margin-top:10px}
-
-/* ── summary bar ── */
-.summary-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
-.sum-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:12px 14px}
-.sum-label{font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.sum-val{font-size:22px;font-weight:600;color:var(--text)}
-.sum-sub{font-size:11px;color:var(--text3);margin-top:2px}
-
-/* ── retention ── */
-.and-badge{color:#a8d8a8;font-size:10px;font-family:var(--mono)}
-.ios-badge{color:#a8c8e8;font-size:10px;font-family:var(--mono)}
-.ret-section{margin-bottom:20px}
-
-/* ── empty state ── */
-.empty{padding:48px 20px;text-align:center;color:var(--text3);font-family:var(--mono);font-size:13px;border:0.5px dashed var(--border);border-radius:var(--rl)}
-.empty-icon{font-size:32px;margin-bottom:12px}
-
-/* ── overlays ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;overflow-y:auto;padding:40px 20px}
-.overlay.active{display:flex;align-items:flex-start;justify-content:center}
-.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--rl);width:100%;max-width:680px;padding:28px}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.modal-title{font-size:18px;font-weight:600}
-.close-btn{background:transparent;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px}
-.close-btn:hover{color:var(--text);background:var(--bg3)}
-
-/* ── admin forms ── */
-.form-group{margin-bottom:16px}
-.form-label{font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:7px}
-input[type=text],input[type=password],select,textarea{width:100%;padding:9px 12px;border-radius:var(--r);border:0.5px solid var(--border);background:var(--bg3);color:var(--text);font-family:var(--sans);font-size:13px}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green)}
-.hint{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5}
-
-/* ── upload slots ── */
-.slot{border:0.5px solid var(--border);border-radius:var(--rl);padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--bg3);transition:all .15s;position:relative;margin-bottom:8px}
-.slot:hover{border-color:var(--border2)}
-.slot.ok{border-color:var(--green-border);background:var(--green-bg)}
-.slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.slot-icon{font-size:18px;flex-shrink:0}
-.slot-label{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
-.slot-hint{font-size:11px;color:var(--text3)}
-.slot-status{font-size:11px;font-weight:500;color:var(--text3);flex-shrink:0;margin-left:auto}
-.slot.ok .slot-status{color:var(--green)}
-
-/* ── alerts ── */
-.alert{padding:10px 14px;border-radius:var(--r);font-size:12px;font-family:var(--mono);margin-top:10px}
-.alert-error{background:var(--red-bg);color:var(--red);border:0.5px solid var(--red-border)}
-.alert-ok{background:var(--green-bg);color:var(--green);border:0.5px solid var(--green-border)}
-.alert-info{background:var(--blue-bg);color:var(--blue);border:0.5px solid rgba(77,166,255,.25)}
-
-/* ── setup screen ── */
-.setup-wrap{max-width:600px;margin:80px auto;text-align:center}
-.setup-icon{font-size:48px;margin-bottom:20px}
-.setup-title{font-size:24px;font-weight:600;margin-bottom:8px}
-.setup-sub{color:var(--text2);margin-bottom:28px}
-.steps{text-align:left;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rl);padding:20px 24px;margin-bottom:20px}
-.step{display:flex;gap:14px;margin-bottom:14px;font-size:13px;color:var(--text2)}
-.step:last-child{margin-bottom:0}
-.step-num{width:22px;height:22px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);color:var(--text3);flex-shrink:0;margin-top:1px}
-
-/* ── loading ── */
-#loading{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:12px;color:var(--text3);font-family:var(--mono);font-size:13px}
-.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── responsive ── */
-@media(max-width:600px){
-  .summary-bar{grid-template-columns:1fr 1fr}
-  .rank-card{grid-template-columns:24px 1fr 52px}
-}
-</style>
+        /* Misc */
+        .empty { padding: 40px; text-align: center; color: var(--text3); font-family: var(--mono); }
+        #loading { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 1000; }
+        #loading-bar { height: 100%; background: var(--green); width: 0; transition: 0.3s; }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════════ LOADING ═══════════════ -->
-<div id="loading">
-  <div class="spinner"></div>
-  <span>Завантажуємо дані…</span>
-</div>
+    <div id="loading"><div id="loading-bar"></div></div>
 
-<!-- ═══════════════ SETUP (no Gist ID) ═══════════════ -->
-<div id="setup-screen" style="display:none" class="shell">
-  <div class="setup-wrap">
-    <div class="setup-icon">⚙️</div>
-    <div class="setup-title">Потрібне налаштування</div>
-    <div class="setup-sub">Відкрийте файл <code>index.html</code> та вкажіть ваш <code>GIST_ID</code></div>
-    <div class="steps">
-      <div class="step"><div class="step-num">1</div><div>Створіть акаунт на <a href="https://github.com" target="_blank">github.com</a></div></div>
-      <div class="step"><div class="step-num">2</div><div>Перейдіть на <a href="https://gist.github.com" target="_blank">gist.github.com</a> → створіть новий Gist → назва файлу: <code>retail-media.json</code> → вміст: <code>{}</code> → Create public gist</div></div>
-      <div class="step"><div class="step-num">3</div><div>Скопіюйте ID Gist з URL (32 символи після останнього /)</div></div>
-      <div class="step"><div class="step-num">4</div><div>У файлі <code>index.html</code> знайдіть рядок <code>const GIST_ID = 'cb4ab1fd933e3ea5f4e9cc77318ea208'</code> і замініть на ваш ID</div></div>
-      <div class="step"><div class="step-num">5</div><div>Завантажте оновлений <code>index.html</code> до GitHub Pages та відкрийте сайт</div></div>
-    </div>
-    <a href="https://github.com" target="_blank" class="btn btn-accent">github.com →</a>
-  </div>
-</div>
+    <div class="shell">
+        <header>
+            <div class="logo">RETAIL <span>MEDIA</span> // KASTA</div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <div id="date-label" style="font-family: var(--mono); font-size: 12px; color: var(--text2);">—</div>
+                <button class="btn" onclick="toggleAdmin(true)">⚙️ Адмін</button>
+            </div>
+        </header>
 
-<!-- ═══════════════ DASHBOARD ═══════════════ -->
-<div id="dashboard" style="display:none" class="shell">
-  <div class="page-header">
-    <div>
-      <div class="logo">RETAIL <strong>MEDIA</strong> // KASTA</div>
-    </div>
-    <div class="header-right">
-      <div id="month-badge" class="month-badge">—</div>
-      <div id="updated-at" class="updated-at"></div>
-      <button class="btn btn-sm" onclick="openAdmin()">⚙ Адмін</button>
-    </div>
-  </div>
-
-  <div id="summary-bar" class="summary-bar" style="display:none"></div>
-
-  <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('banners',this)">Банери</button>
-    <button class="tab-btn" onclick="showTab('stories',this)">Сторіз</button>
-    <button class="tab-btn" onclick="showTab('retention',this)">Ретеншн</button>
-  </div>
-
-  <div id="panel-banners" class="panel active"></div>
-  <div id="panel-stories" class="panel"></div>
-  <div id="panel-retention" class="panel"></div>
-</div>
-
-<!-- ═══════════════ ADMIN OVERLAY ═══════════════ -->
-<div id="admin-overlay" class="overlay">
-  <div class="modal">
-
-    <!-- Login -->
-    <div id="admin-login">
-      <div class="modal-header">
-        <div class="modal-title">Адміністрування</div>
-        <button class="close-btn" onclick="closeAdmin()">✕</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Пароль</label>
-        <input type="password" id="admin-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <button class="btn btn-accent" onclick="doLogin()">Увійти</button>
-      <div id="login-error" style="display:none" class="alert alert-error">Невірний пароль</div>
-    </div>
-
-    <!-- Panel -->
-    <div id="admin-panel" style="display:none">
-      <div class="modal-header">
-        <div class="modal-title">Завантаження даних</div>
-        <button class="close-btn" onclick="closeAdmin()">✕</button>
-      </div>
-
-      <!-- Token -->
-      <div class="form-group">
-        <label class="form-label">GitHub Personal Access Token <span class="pill pgr">зберігається локально</span></label>
-        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
-        <div class="hint">Потрібен лише для збереження. <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank">Створити токен →</a> (обрати scope: gist)</div>
-      </div>
-
-      <!-- Month label -->
-      <div class="form-group">
-        <label class="form-label">Місяць (назва для відображення)</label>
-        <input type="text" id="month-label" placeholder="Березень 2026">
-      </div>
-
-      <!-- Banners + Stories -->
-      <div class="section-label" style="margin-top:4px">Банери та сторіз</div>
-      <label class="slot" id="slot-banners">
-        <input type="file" accept=".xls,.xlsx" onchange="onFile('banners',this)">
-        <span class="slot-icon">📊</span>
-        <div><div class="slot-label">Файл банерів (XLS)</div><div class="slot-hint">Дата · Tags · Title · Placement · Sessions</div></div>
-        <span class="slot-status" id="sst-banners">Вибрати</span>
-      </label>
-      <label class="slot" id="slot-stories">
-        <input type="file" accept=".xls,.xlsx" onchange="onFile('stories',this)">
-        <span class="slot-icon">📖</span>
-        <div><div class="slot-label">Файл усіх сторіз (XLS)</div><div class="slot-hint">Дата · ID.1 (URL) · Sessions</div></div>
-        <span class="slot-status" id="sst-stories">Вибрати</span>
-      </label>
-      <label class="slot" id="slot-paid">
-        <input type="file" accept=".csv,.txt" onchange="onFile('paid',this)">
-        <span class="slot-icon">✅</span>
-        <div><div class="slot-label">Список платних сторіз (CSV)</div><div class="slot-hint">Brand ; дати ; URL</div></div>
-        <span class="slot-status" id="sst-paid">Вибрати</span>
-      </label>
-
-      <!-- Retention -->
-      <div class="section-label" style="margin-top:16px">Ретеншн (пуш / email / viber)</div>
-      <label class="slot" id="slot-ret">
-        <input type="file" accept=".csv,.txt" onchange="onFile('retention',this)">
-        <span class="slot-icon">📨</span>
-        <div><div class="slot-label">Файл ретеншн (CSV)</div><div class="slot-hint">activity_dt ; media_type ; segment_name ; sent ; del ; opens ; clicks</div></div>
-        <span class="slot-status" id="sst-ret">Вибрати</span>
-      </label>
-
-      <div id="admin-msg" style="margin-top:12px"></div>
-
-      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-        <button class="btn btn-accent" id="save-btn" onclick="saveAll()">💾 Зберегти та опублікувати</button>
-        <button class="btn btn-sm" onclick="clearFiles()">✕ Скинути файли</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════════════
-//  ⚠️  НАЛАШТУВАННЯ — ЗМІНИТИ ПРИ ДЕПЛОЇ
-// ══════════════════════════════════════════════════════════════════
-const GIST_ID         = 'cb4ab1fd933e3ea5f4e9cc77318ea208';           // ← вставити ID Gist
-const ADMIN_PWD_HASH  = 'a8b54f0a009af61ee42386167e0c23afe766b6fde4c0d19dd0adaa5a481e03d6'; // sha256 "kasta2026"
-// ══════════════════════════════════════════════════════════════════
-
-// ─── state ───────────────────────────────────────────────────────
-let DATA = null; // full gist data
-const FILES = {};
-const FNAMES = {};
-const MONTH_MAP = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
-  сін:1,лют:2,бер:3,кві:4,тра:5,чер:6,лип:7,сер:8,вер:9,жов:10,лис:11,гру:12};
-const TAG_NAMES = {main:'Головна',women:'Жінки',men:'Чоловіки',shoes:'Взуття',
-  children:'Діти',sport:'Спорт',lingery:'Білизна',home:'Дім',
-  ukraine:'Україна',potribnychky:'Потрібнички',makeup:'Макіяж',accessorize:'Аксесуари'};
-const IGNORE_TAG = /^landing-sale/i;
-
-// ─── utils ───────────────────────────────────────────────────────
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const toNum = v => parseFloat(String(v??'').replace(/\s/g,'').replace('%','').replace(',','.').trim())||0;
-const fmt = (n,d=0) => isNaN(n)||!isFinite(n)?'—':Number(n).toLocaleString('uk-UA',{minimumFractionDigits:d,maximumFractionDigits:d});
-const fmtK = n => n>=1e6?(n/1e6).toFixed(1)+'М':n>=1000?(n/1000).toFixed(0)+'К':String(Math.round(n));
-const pct = (a,b) => b>0?+(a/b*100).toFixed(2):0;
-const median = arr => {
-  const s=arr.filter(x=>isFinite(x)&&!isNaN(x)).sort((a,b)=>a-b);
-  if(!s.length) return 0;
-  const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2;
-};
-const pctile = (arr,p) => {
-  const s=arr.filter(x=>isFinite(x)&&!isNaN(x)).sort((a,b)=>a-b);
-  if(!s.length) return 0;
-  const i=(p/100)*(s.length-1),lo=Math.floor(i),hi=Math.ceil(i);
-  return s[lo]+(s[hi]-s[lo])*(i-lo);
-};
-const scoreColor = s => s>=70?'#3ddc84':s>=30?'#f5a623':'#ff5b5b';
-
-const parseFull = v => {
-  if(!v) return null;
-  const m=String(v).match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-  if(m) return new Date(+m[3],+m[2]-1,+m[1]);
-  const d=new Date(v); return isNaN(d)?null:d;
-};
-const parseShort = (v,yr) => {
-  if(!v) return null; const s=String(v).trim();
-  let m=s.match(/^(\d{1,2})[-/]([a-zа-яіє]{3,})/i);
-  if(m){const mo=MONTH_MAP[m[2].toLowerCase().slice(0,3)];if(mo) return new Date(yr,mo-1,+m[1]);}
-  m=s.match(/^([a-zа-яіє]{3,})[-/](\d{1,2})/i);
-  if(m){const mo=MONTH_MAP[m[1].toLowerCase().slice(0,3)];if(mo) return new Date(yr,mo-1,+m[2]);}
-  m=s.match(/^(\d{1,2})[./](\d{1,2})$/); if(m) return new Date(yr,+m[2]-1,+m[1]);
-  return null;
-};
-const dayTs = d => d?new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime():null;
-const normUrl = u => String(u||'').replace('/uk/','/ru/').replace('/ru/ru/','/ru/').trim().toLowerCase().replace(/\/+$/,'');
-const expandTags = raw => {
-  const p=String(raw||'main').split(',').map(t=>t.trim().toLowerCase()).filter(t=>t&&!IGNORE_TAG.test(t));
-  return p.length?p:['main'];
-};
-
-async function sha256(s) {
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-// ─── file I/O ────────────────────────────────────────────────────
-const readXls = f => new Promise((res,rej)=>{
-  const r=new FileReader();
-  r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});
-    res(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}));}catch(err){rej(err);}};
-  r.onerror=rej; r.readAsArrayBuffer(f);
-});
-const readTxt = f => new Promise((res,rej)=>{
-  const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(f,'utf-8');
-});
-
-// ─── gist API ────────────────────────────────────────────────────
-async function fetchGist() {
-  const r = await fetch(`https://api.github.com/gists/${GIST_ID}`,
-    {headers:{'Accept':'application/vnd.github+json'}});
-  if(!r.ok) throw new Error('Gist не знайдено. Перевір GIST_ID у файлі.');
-  const j = await r.json();
-  const file = j.files['retail-media.json'];
-  if(!file) throw new Error('Файл retail-media.json не знайдено в Gist.');
-  return JSON.parse(file.content||'{}');
-}
-
-async function saveGist(data, token) {
-  const r = await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-    method:'PATCH',
-    headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-    body: JSON.stringify({files:{'retail-media.json':{content:JSON.stringify(data,null,2)}}})
-  });
-  if(!r.ok) {const e=await r.json();throw new Error(e.message||'Помилка збереження');}
-  return r.json();
-}
-
-// ─── banner parser ───────────────────────────────────────────────
-function parseBanners(rows) {
-  const map={};
-  for(const r of rows){
-    const date=String(r['Дата']||'').toLowerCase();
-    if(['итого','total','разом'].includes(date)) continue;
-    const title=String(r['Title']||r['title']||'');
-    if(!/рітейл/i.test(title)) continue;
-    const tags=expandTags(r['Tags']||r['tags']||'main');
-    const pl=String(r['Placement']||r['placement']||'').trim();
-    const imp=toNum(r['Sessions with impressions']);
-    const clk=toNum(r['Sessions with click']);
-    const pur=toNum(r['Sessions with purchase']);
-    const d=parseFull(r['Дата']);
-    for(const tag of tags){
-      const key=`${title}||${tag}||${pl}`;
-      if(!map[key]) map[key]={title,tag,pl,imp:0,clicks:0,purch:0,dates:new Set()};
-      map[key].imp+=imp; map[key].clicks+=clk; map[key].purch+=pur;
-      if(d) map[key].dates.add(d.getTime());
-    }
-  }
-  return Object.values(map).filter(c=>c.imp>0).map(c=>{
-    const days=c.dates.size||1;
-    return{title:c.title,tag:c.tag,placement:c.pl,imp:c.imp,clicks:c.clicks,purch:c.purch,days,
-      CTR:c.imp>0?c.clicks/c.imp*100:0,Conv:c.clicks>0?c.purch/c.clicks*100:0,
-      instrument:`Банер ${TAG_NAMES[c.tag]||c.tag} — місце ${c.pl}`,impPerDay:c.imp/days};
-  });
-}
-
-// ─── paid CSV parser ─────────────────────────────────────────────
-function parsePaidCSV(raw,yr) {
-  const lines=raw.replace(/\r/g,'').split('\n').filter(l=>l.trim());
-  if(!lines.length) return [];
-  const sep=[';','\t',','].find(s=>(lines[0].match(new RegExp('\\'+s,'g'))||[]).length>=1)||';';
-  const rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
-  const isUrl=v=>String(v).startsWith('http')||String(v).includes('kasta.ua');
-  const isDate=v=>{const s=String(v).trim();return /^\d{1,2}[-/][a-zа-яіє]{3}/i.test(s)||/^\d{1,2}[./]\d{1,2}$/.test(s);};
-  const isHeader=r=>r.every(c=>!isUrl(c)&&!isDate(c)&&String(c).length<30);
-  const dataRows=rows.length>1&&isHeader(rows[0])?rows.slice(1):rows;
-  const entries=[];const urlCounts={};
-  for(const r of dataRows){
-    const urlIdx=r.findIndex(c=>isUrl(c));if(urlIdx<0) continue;
-    const brandIdx=r.findIndex((c,i)=>i!==urlIdx&&String(c).trim()&&!isDate(c)&&!isUrl(c));if(brandIdx<0) continue;
-    const brand=r[brandIdx].replace(/'/g,"'").trim();
-    if(!brand||/^(brand|бренд|назва)$/i.test(brand)) continue;
-    const url=r[urlIdx].trim();
-    const dateCols=r.map((c,i)=>({v:c,i})).filter(({v})=>isDate(v));
-    let s=null,e=null;
-    if(dateCols.length>=2){const d0=parseShort(dateCols[0].v,yr),d1=parseShort(dateCols[1].v,yr);if(d0&&d1){[s,e]=d0<=d1?[d0,d1]:[d1,d0];}}
-    else if(dateCols.length===1){s=e=parseShort(dateCols[0].v,yr);}
-    const n=normUrl(url);
-    if(urlCounts[n]===undefined) urlCounts[n]=0; else urlCounts[n]++;
-    entries.push({brand,url,normUrl:n,startDate:s,endDate:e,campIdx:urlCounts[n]});
-  }
-  return entries;
-}
-
-// ─── story parser ────────────────────────────────────────────────
-function parseStories(rows,paidEntries) {
-  if(!paidEntries.length) return [];
-  const yrArr=rows.flatMap(r=>{const d=parseFull(r['Дата']);return d?[d.getFullYear()]:[]});
-  const yr=yrArr.length?yrArr.sort()[Math.floor(yrArr.length/2)]:new Date().getFullYear();
-  const urlToSlots={};
-  for(const e of paidEntries){
-    if(!urlToSlots[e.normUrl]) urlToSlots[e.normUrl]=[];
-    urlToSlots[e.normUrl].push({brand:e.brand,campIdx:e.campIdx,
-      start:e.startDate?dayTs(e.startDate):null,end:e.endDate?dayTs(e.endDate):null});
-  }
-  const allPaid=new Set(Object.keys(urlToSlots));
-  const getUrl=r=>{
-    for(const c of['ID.1','id.1']){const v=String(r[c]||'');if(v.startsWith('http')||v.includes('kasta.ua')) return v;}
-    return Object.values(r).find(v=>String(v).startsWith('http'))||'';
-  };
-  const map={};
-  for(const r of rows){
-    const date=String(r['Дата']||'').toLowerCase();
-    if(['итого','total','разом'].includes(date)) continue;
-    const ru=getUrl(r);if(!ru||ru==='-') continue;
-    const n=normUrl(ru);if(!allPaid.has(n)) continue;
-    const sd=parseFull(r['Дата']);const ts=sd?dayTs(sd):null;
-    const slots=urlToSlots[n];
-    let slot=null;
-    if(ts!==null){
-      slot=slots.find(s=>s.start!==null&&s.end!==null&&ts>=s.start&&ts<=s.end);
-      if(!slot){let bd=Infinity;for(const s of slots){const ref=s.end??s.start;if(ref!==null){const d=Math.abs(ts-ref);if(d<bd){bd=d;slot=s;}}}slot=slot||slots[0];}
-    } else slot=slots[0];
-    const key=`${n}||${slot.campIdx}`;
-    if(!map[key]) map[key]={brand:slot.brand,imp:0,clicks:0,purch:0,dates:new Set()};
-    map[key].imp+=toNum(r['Sessions with impressions']);
-    map[key].clicks+=toNum(r['Sessions with click']);
-    map[key].purch+=toNum(r['Sessions with purchase']);
-    if(sd) map[key].dates.add(sd.getTime());
-  }
-  return Object.values(map).filter(c=>c.imp>0).map(c=>{
-    const days=c.dates.size||1;
-    return{title:c.brand,imp:c.imp,clicks:c.clicks,purch:c.purch,days,
-      CTR:c.imp>0?c.clicks/c.imp*100:0,Conv:c.clicks>0?c.purch/c.clicks*100:0};
-  });
-}
-
-// ─── benchmark builder ───────────────────────────────────────────
-function buildStats(camps) {
-  const by={};
-  for(const c of camps){if(!by[c.instrument])by[c.instrument]=[];by[c.instrument].push(c);}
-  const maxN=Math.max(1,...Object.values(by).map(g=>g.length));
-  const stats=Object.entries(by).map(([inst,cs])=>{
-    const ctrs=cs.map(c=>c.CTR),convs=cs.map(c=>c.Conv).filter(x=>isFinite(x));
-    const imps=cs.map(c=>c.imp),days=cs.map(c=>c.days);
-    const medCTR=median(ctrs),medConv=median(convs);
-    const avgImp=imps.reduce((a,b)=>a+b,0)/imps.length;
-    const avgIPD=(days.reduce((a,b)=>a+b,0)/days.length||1);
-    const avgIPDval=avgImp/avgIPD;
-    const purchPerC=(medCTR/100)*(medConv/100)*avgImp;
-    const conf=Math.log1p(cs.length)/Math.log1p(maxN);
-    return{instrument:inst,n:cs.length,
-      medCTR:+medCTR.toFixed(3),p25CTR:+pctile(ctrs,25).toFixed(3),p75CTR:+pctile(ctrs,75).toFixed(3),
-      medConv:+medConv.toFixed(2),p25Conv:+pctile(convs,25).toFixed(2),p75Conv:+pctile(convs,75).toFixed(2),
-      avgImp:Math.round(avgImp),avgIPD:Math.round(avgIPDval),purchPerC:+purchPerC.toFixed(1),
-      conf:+conf.toFixed(2),scoreRaw:purchPerC*conf};
-  });
-  const maxScore=Math.max(1,...stats.map(s=>s.scoreRaw));
-  return stats.map(s=>({...s,score:+(s.scoreRaw/maxScore*100).toFixed(1)})).sort((a,b)=>b.score-a.score);
-}
-
-// ─── retention parser ────────────────────────────────────────────
-function parseRetentionCSV(raw) {
-  const lines=raw.replace(/\r/g,'').split('\n').filter(l=>l.trim());
-  if(!lines.length) return {push:[],email:[],viber:[]};
-  const hasHeader=lines[0].toLowerCase().includes('activity')||lines[0].toLowerCase().includes('media_type');
-  const dataLines=hasHeader?lines.slice(1):lines;
-  let lastDate='';
-  const rows=dataLines.map(line=>{
-    const p=line.split(';').map(s=>s.trim());
-    const date=(p[0]||'').trim()||lastDate;
-    if(date) lastDate=date;
-    return{date,type:p[1]||'',segment:p[2]||'',
-      sent:toNum(p[3]),del:toNum(p[4]),opens:toNum(p[5]),clicks:toNum(p[6])};
-  }).filter(r=>r.type&&r.segment);
-
-  const pushRows=rows.filter(r=>r.type==='mobilepush');
-  const emailRows=rows.filter(r=>r.type==='email');
-  const viberRows=rows.filter(r=>r.type==='viber');
-
-  // Group push by base name
-  const pushMap={};
-  for(const r of pushRows){
-    const isAnd=r.segment.endsWith('_and]');
-    const isIos=r.segment.endsWith('_ios]');
-    const base=r.segment.replace(/_and\]$/,']').replace(/_ios\]$/,']');
-    if(!pushMap[base]) pushMap[base]={segment:base,dates:new Set(),and:{sent:0,del:0,opens:0,clicks:0},ios:{sent:0,del:0,opens:0,clicks:0}};
-    if(r.date) pushMap[base].dates.add(r.date);
-    const t=isIos?pushMap[base].ios:pushMap[base].and;
-    t.sent+=r.sent;t.del+=r.del;t.opens+=r.opens;t.clicks+=r.clicks;
-  }
-  const push=Object.values(pushMap).map(c=>{
-    const total={sent:c.and.sent+c.ios.sent,del:c.and.del+c.ios.del,opens:c.and.opens+c.ios.opens,clicks:c.and.clicks+c.ios.clicks};
-    return{segment:c.segment,dates:[...c.dates].sort(),and:c.and,ios:c.ios,total,
-      openRate:pct(total.opens,total.del),clickRate:pct(total.clicks,total.del),
-      delRate:pct(total.del,total.sent)};
-  });
-
-  const email=emailRows.map(r=>({...r,delRate:pct(r.del,r.sent),openRate:pct(r.opens,r.del),clickRate:pct(r.clicks,r.del)}));
-  const viber=viberRows.map(r=>({...r,delRate:pct(r.del,r.sent),clickRate:pct(r.clicks,r.del)}));
-  return{push,email,viber};
-}
-
-// ─── render: banners ─────────────────────────────────────────────
-function renderBanners(instruments,bannerCamps) {
-  const el=document.getElementById('panel-banners');
-  if(!instruments||!instruments.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📊</div>Дані банерів відсутні</div>`;return;}
-  let html='<div class="section-label">Рейтинг інструментів</div>';
-  instruments.forEach((inst,i)=>{
-    const rank=i+1;const col=scoreColor(inst.score);
-    const tier=rank<=2?'<span class="pill pg">Топ</span>':rank<=6?'<span class="pill pa">Серед.</span>':'<span class="pill pgr">Нижче</span>';
-    const warn=inst.n<4?`<span class="pill pa">⚠ N=${inst.n}</span>`:'';
-    html+=`<div class="rank-card">
-      <div class="rank-num ${rank<=3?'g':''}">${rank}</div>
-      <div>
-        <div class="rank-name">${esc(inst.instrument)} ${tier}${warn}</div>
-        <div class="rank-metrics">
-          <span class="rm"><strong>${inst.medCTR.toFixed(3)}%</strong> CTR</span>
-          <span class="rm"><strong>${inst.medConv.toFixed(2)}%</strong> Конв.</span>
-          <span class="rm"><strong>${inst.purchPerC}</strong> пок./кам.</span>
-          <span class="rm"><strong>${fmtK(inst.avgImp)}</strong> охват</span>
-          <span class="rm"><strong>N=${inst.n}</strong></span>
+        <div id="summary" class="summary">
+            <!-- Dynamic -->
         </div>
-        <div class="score-bg"><div class="score-fill" style="width:${inst.score}%;background:${col}"></div></div>
-      </div>
-      <div><div class="rank-score" style="color:${col}">${inst.score}</div><div class="rank-score-sub">скор</div></div>
-    </div>`;
-  });
-  html+=`<div style="margin-top:16px"><div class="section-label">Всі кампанії</div><div class="tbl-wrap"><table class="dt">
-    <thead><tr><th class="tl">Назва</th><th class="tl">Інструмент</th><th>Показів</th><th>Кліків</th><th>Покупок</th><th>CTR</th><th>Конв.</th><th>Днів</th></tr></thead><tbody>`;
-  (bannerCamps||[]).sort((a,b)=>b.imp-a.imp).forEach(c=>{
-    const ctrC=c.CTR>=1?'color:var(--green)':'';
-    html+=`<tr>
-      <td class="tl" style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(c.title)}</td>
-      <td class="tl" style="white-space:nowrap">${esc(c.instrument)}</td>
-      <td>${fmt(c.imp)}</td><td>${fmt(c.clicks)}</td><td>${fmt(c.purch)}</td>
-      <td style="${ctrC}">${c.CTR.toFixed(3)}%</td>
-      <td>${c.Conv.toFixed(2)}%</td><td>${c.days}</td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div></div>`;
-  html+=`<div class="alert alert-info" style="margin-top:12px;font-size:11px">Скор = покупок/кампанію × довіра (log N). Враховує ефективність + масштаб.</div>`;
-  el.innerHTML=html;
-}
 
-// ─── render: stories ─────────────────────────────────────────────
-function renderStories(storyCamps) {
-  const el=document.getElementById('panel-stories');
-  if(!storyCamps||!storyCamps.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📖</div>Дані сторіз відсутні</div>`;return;}
-  let html=`<div class="tbl-wrap"><table class="dt">
-    <thead><tr><th class="tl">Бренд</th><th>Показів</th><th>Кліків</th><th>Покупок</th><th>CTR</th><th>Конв.</th><th>Днів</th></tr></thead><tbody>`;
-  [...storyCamps].sort((a,b)=>b.imp-a.imp).forEach(c=>{
-    const ctrC=c.CTR>=0.3?'color:var(--green)':c.CTR<0.2?'color:var(--red)':'';
-    html+=`<tr>
-      <td class="tl">${esc(c.title)}</td>
-      <td>${fmt(c.imp)}</td><td>${fmt(c.clicks)}</td><td>${fmt(c.purch)}</td>
-      <td style="${ctrC}">${c.CTR.toFixed(3)}%</td>
-      <td>${c.Conv.toFixed(2)}%</td><td>${c.days}</td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div>`;
-  el.innerHTML=html;
-}
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('banners', this)">Банери</div>
+            <div class="tab" onclick="switchTab('stories', this)">Сторіз</div>
+            <div class="tab" onclick="switchTab('retention', this)">Ретеншн</div>
+            <div class="tab" onclick="switchTab('calc', this)">Прогноз</div>
+        </div>
 
-// ─── render: retention ───────────────────────────────────────────
-function renderRetention(ret) {
-  const el=document.getElementById('panel-retention');
-  if(!ret||(!ret.push.length&&!ret.email.length&&!ret.viber.length)){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">📨</div>Дані ретеншн відсутні</div>`;return;
-  }
-  const tabs=`<div class="sub-tabs">
-    <button class="sub-tab active" onclick="showSubTab('push',this)">Пуш (${ret.push.length})</button>
-    <button class="sub-tab" onclick="showSubTab('email',this)">Email (${ret.email.length})</button>
-    <button class="sub-tab" onclick="showSubTab('viber',this)">Viber (${ret.viber.length})</button>
-  </div>`;
+        <!-- BANNERS -->
+        <div id="panel-banners" class="panel active">
+            <div class="filter-row">
+                <label style="margin:0">Категорія:</label>
+                <select id="cat-filter" onchange="renderBanners()">
+                    <option value="all">Всі категорії</option>
+                </select>
+            </div>
+            <div id="rating-list" class="rating-grid"></div>
+            
+            <div style="margin-top: 32px; margin-bottom: 12px;" class="logo">УСІ КАМПАНІЇ</div>
+            <div class="table-wrap">
+                <table id="tbl-banners">
+                    <thead>
+                        <tr>
+                            <th>Назва</th>
+                            <th>Інструмент</th>
+                            <th>Показів</th>
+                            <th>Кліків</th>
+                            <th>Покупок</th>
+                            <th>CTR</th>
+                            <th>Конв.</th>
+                            <th>Днів</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
 
-  // Push
-  let push=`<div id="ret-push" class="ret-section">`;
-  if(!ret.push.length){push+=`<div class="empty" style="padding:24px">Немає даних пушів</div>`;}
-  else{
-    push+=`<div class="tbl-wrap"><table class="dt">
-      <thead><tr>
-        <th class="tl">Кампанія</th><th class="tl">Дата(и)</th>
-        <th>Відправлено</th><th>Доставлено</th><th>Доставк.</th>
-        <th>Відкриттів</th><th>Open rate</th><th>Click rate</th>
-      </tr></thead><tbody>`;
-    for(const c of ret.push){
-      const seg=c.segment.replace(/^\[/,'').replace(/\]$/,'');
-      const dates=c.dates.join(', ');
-      push+=`<tr>
-        <td class="tl"><strong>${esc(seg)}</strong></td>
-        <td class="tl" style="color:var(--text2);font-size:11px">${esc(dates)}</td>
-        <td>${fmtK(c.total.sent)}</td><td>${fmtK(c.total.del)}</td>
-        <td>${c.delRate.toFixed(1)}%</td>
-        <td>${fmtK(c.total.opens)}</td>
-        <td style="color:${c.openRate>=2?'var(--green)':''}">${c.openRate.toFixed(2)}%</td>
-        <td style="color:${c.clickRate>=1?'var(--green)':''}">${c.clickRate.toFixed(2)}%</td>
-      </tr>`;
-      // Android sub-row
-      if(c.and.sent>0){
-        const andDel=pct(c.and.del,c.and.sent);
-        const andOr=pct(c.and.opens,c.and.del);
-        const andCr=pct(c.and.clicks,c.and.del);
-        push+=`<tr class="sub-row">
-          <td class="tl"><span class="and-badge">↳ Android</span></td><td></td>
-          <td>${fmtK(c.and.sent)}</td><td>${fmtK(c.and.del)}</td>
-          <td>${andDel.toFixed(1)}%</td><td>${fmtK(c.and.opens)}</td>
-          <td>${andOr.toFixed(2)}%</td><td>${andCr.toFixed(2)}%</td>
-        </tr>`;
-      }
-      // iOS sub-row
-      if(c.ios.sent>0){
-        const iosDel=pct(c.ios.del,c.ios.sent);
-        const iosOr=pct(c.ios.opens,c.ios.del);
-        const iosCr=pct(c.ios.clicks,c.ios.del);
-        push+=`<tr class="sub-row">
-          <td class="tl"><span class="ios-badge">↳ iOS</span></td><td></td>
-          <td>${fmtK(c.ios.sent)}</td><td>${fmtK(c.ios.del)}</td>
-          <td>${iosDel.toFixed(1)}%</td><td>${fmtK(c.ios.opens)}</td>
-          <td>${iosOr.toFixed(2)}%</td><td>${iosCr.toFixed(2)}%</td>
-        </tr>`;
-      }
-    }
-    push+=`</tbody></table></div>`;
-  }
-  push+=`</div>`;
+        <!-- STORIES -->
+        <div id="panel-stories" class="panel">
+            <div id="story-stats" style="margin-bottom: 20px;"></div>
+            <div class="table-wrap">
+                <table id="tbl-stories">
+                    <thead>
+                        <tr>
+                            <th>Бренд</th>
+                            <th>Показів</th>
+                            <th>Кліків</th>
+                            <th>Покупок</th>
+                            <th>CTR</th>
+                            <th>Конв.</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
 
-  // Email
-  let email=`<div id="ret-email" class="ret-section" style="display:none">`;
-  if(!ret.email.length){email+=`<div class="empty" style="padding:24px">Немає даних email</div>`;}
-  else{
-    email+=`<div class="tbl-wrap"><table class="dt">
-      <thead><tr><th class="tl">Кампанія</th><th class="tl">Дата</th>
-        <th>Відправлено</th><th>Доставлено</th><th>Відкриттів</th>
-        <th>Open rate</th><th>Кліків</th><th>Click rate</th>
-      </tr></thead><tbody>`;
-    for(const c of ret.email){
-      const seg=c.segment.replace(/^\[/,'').replace(/\]$/,'');
-      email+=`<tr>
-        <td class="tl">${esc(seg)}</td><td class="tl" style="color:var(--text2);font-size:11px">${esc(c.date)}</td>
-        <td>${fmtK(c.sent)}</td><td>${fmtK(c.del)}</td><td>${fmtK(c.opens)}</td>
-        <td style="color:${c.openRate>=30?'var(--green)':''}">${c.openRate.toFixed(1)}%</td>
-        <td>${fmtK(c.clicks)}</td>
-        <td>${c.clickRate.toFixed(2)}%</td>
-      </tr>`;
-    }
-    email+=`</tbody></table></div>`;
-  }
-  email+=`</div>`;
+        <!-- RETENTION -->
+        <div id="panel-retention" class="panel">
+            <div class="tabs" style="border-bottom: none; margin-bottom: 10px;">
+                <div class="tab active" style="font-size: 11px;" onclick="switchSubTab('push', this)">Пуш</div>
+                <div class="tab" style="font-size: 11px;" onclick="switchSubTab('email', this)">Email</div>
+                <div class="tab" style="font-size: 11px;" onclick="switchSubTab('viber', this)">Viber</div>
+            </div>
+            <div id="ret-content"></div>
+        </div>
 
-  // Viber
-  let viber=`<div id="ret-viber" class="ret-section" style="display:none">`;
-  if(!ret.viber.length){viber+=`<div class="empty" style="padding:24px">Немає даних Viber</div>`;}
-  else{
-    viber+=`<div class="tbl-wrap"><table class="dt">
-      <thead><tr><th class="tl">Кампанія</th><th class="tl">Дата</th>
-        <th>Відправлено</th><th>Доставлено</th><th>Доставк.</th>
-        <th>Кліків</th><th>Click rate</th>
-      </tr></thead><tbody>`;
-    for(const c of ret.viber){
-      const seg=c.segment.replace(/^\[/,'').replace(/\]$/,'');
-      viber+=`<tr>
-        <td class="tl">${esc(seg)}</td><td class="tl" style="color:var(--text2);font-size:11px">${esc(c.date)}</td>
-        <td>${fmtK(c.sent)}</td><td>${fmtK(c.del)}</td>
-        <td>${c.delRate.toFixed(1)}%</td>
-        <td>${fmtK(c.clicks)}</td>
-        <td style="color:${c.clickRate>=3?'var(--green)':''}">${c.clickRate.toFixed(2)}%</td>
-      </tr>`;
-    }
-    viber+=`</tbody></table></div>`;
-  }
-  viber+=`</div>`;
+        <!-- CALCULATOR -->
+        <div id="panel-calc" class="panel">
+            <div class="calc-grid">
+                <div class="card">
+                    <div class="form-group">
+                        <label>Режим</label>
+                        <select id="calc-mode" onchange="toggleCalcMode()">
+                            <option value="single">Один інструмент</option>
+                            <option value="multi">Пакет (Синергія)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="calc-single-field" class="form-group">
+                        <label>Інструмент</label>
+                        <select id="calc-inst" onchange="runCalc()"></select>
+                    </div>
 
-  el.innerHTML=tabs+push+email+viber;
-}
+                    <div id="calc-multi-field" class="form-group" style="display:none">
+                        <label>Оберіть інструменти</label>
+                        <div id="calc-check-list" style="max-height: 200px; overflow-y: auto; padding: 10px; background: var(--bg); border-radius: var(--r);"></div>
+                    </div>
 
-function showSubTab(id,btn){
-  document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  ['push','email','viber'].forEach(t=>{
-    const el=document.getElementById('ret-'+t);
-    if(el) el.style.display=t===id?'block':'none';
-  });
-}
+                    <div class="form-group">
+                        <label>Тривалість: <span id="calc-days-val" style="color:var(--text)">14</span> днів</label>
+                        <div class="range-wrap">
+                            <input type="range" id="calc-days" min="1" max="30" value="14" oninput="document.getElementById('calc-days-val').innerText=this.value; runCalc()">
+                        </div>
+                    </div>
 
-// ─── render: summary bar ─────────────────────────────────────────
-function renderSummary(data) {
-  const bc=data.bannerCamps||[];
-  const sc=data.storyCamps||[];
-  const ret=data.retention||{};
-  const pushTotal=(ret.push||[]).reduce((s,c)=>s+c.total.sent,0);
-  const emailTotal=(ret.email||[]).reduce((s,c)=>s+c.sent,0);
-  const el=document.getElementById('summary-bar');
-  el.style.display='grid';
-  el.innerHTML=`
-    <div class="sum-card"><div class="sum-label">Банерних кампаній</div><div class="sum-val">${bc.length}</div><div class="sum-sub">${(data.instruments||[]).length} інструментів</div></div>
-    <div class="sum-card"><div class="sum-label">Сторіз кампаній</div><div class="sum-val">${sc.length}</div><div class="sum-sub">платних розміщень</div></div>
-    <div class="sum-card"><div class="sum-label">Пуш надіслано</div><div class="sum-val">${fmtK(pushTotal)}</div><div class="sum-sub">${(ret.push||[]).length} кампаній</div></div>
-    <div class="sum-card"><div class="sum-label">Email надіслано</div><div class="sum-val">${fmtK(emailTotal)}</div><div class="sum-sub">${(ret.email||[]).length} розсилок</div></div>
-  `;
-}
+                    <div class="form-group">
+                        <label>Категорія (опційно)</label>
+                        <select id="calc-cat" onchange="runCalc()">
+                            <option value="all">Загальні дані</option>
+                        </select>
+                    </div>
+                </div>
 
-// ─── main render ─────────────────────────────────────────────────
-function renderDashboard() {
-  const data = DATA;
-  document.getElementById('month-badge').textContent = data.label || '—';
-  if(data.updatedAt) {
-    const d=new Date(data.updatedAt);
-    document.getElementById('updated-at').textContent='Оновлено '+d.toLocaleDateString('uk-UA');
-  }
-  renderSummary(data);
-  renderBanners(data.instruments, data.bannerCamps);
-  renderStories(data.storyCamps);
-  renderRetention(data.retention);
-}
+                <div class="res-card">
+                    <div class="res-title">ПРОГНОЗ РЕЗУЛЬТАТІВ</div>
+                    <div class="res-grid">
+                        <div class="res-box">
+                            <div class="res-label">Очікувані покази</div>
+                            <div id="res-imp" class="res-val">0</div>
+                        </div>
+                        <div class="res-box">
+                            <div class="res-label">Кліки</div>
+                            <div id="res-clicks" class="res-val">0</div>
+                            <div id="res-clicks-range" class="res-sub">0 - 0</div>
+                        </div>
+                        <div class="res-box" style="grid-column: span 2; border-top: 0.5px solid var(--border2); padding-top: 15px;">
+                            <div class="res-label">Прогноз покупок</div>
+                            <div id="res-purch" class="res-val" style="color:var(--green); font-size: 28px;">0</div>
+                            <div id="res-purch-range" class="res-sub">діапазон: 0 - 0</div>
+                        </div>
+                    </div>
+                    <div id="res-synergy" class="synergy-badge" style="display:none">Синергія активована</div>
+                    <div id="res-reliability" style="margin-top: 15px; font-size: 10px; text-align: center; font-family: var(--mono);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-function showTab(id,btn){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('panel-'+id).classList.add('active');
-}
+    <!-- ADMIN OVERLAY -->
+    <div id="admin-overlay" class="overlay">
+        <div class="modal">
+            <div id="admin-login-view">
+                <div class="modal-h">Вхід в адмін-панель <span onclick="toggleAdmin(false)" style="cursor:pointer; opacity:0.5">×</span></div>
+                <input type="password" id="admin-pass" class="input-text" placeholder="Пароль">
+                <button class="btn btn-primary" style="width:100%" onclick="adminAuth()">Увійти</button>
+            </div>
+            
+            <div id="admin-panel-view" style="display:none">
+                <div class="modal-h">Оновлення даних <span onclick="toggleAdmin(false)" style="cursor:pointer; opacity:0.5">×</span></div>
+                
+                <div class="form-group">
+                    <label>Назва місяця</label>
+                    <input type="text" id="month-name" class="input-text" placeholder="Березень 2024">
+                </div>
 
-// ─── admin ───────────────────────────────────────────────────────
-function openAdmin(){
-  const panel=document.getElementById('admin-panel');
-  const login=document.getElementById('admin-login');
-  panel.style.display='none'; login.style.display='block';
-  // Restore token
-  const t=localStorage.getItem('rm_gh_token')||'';
-  document.getElementById('gh-token').value=t;
-  // Default month label
-  const now=new Date();
-  const months=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
-  const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
-  document.getElementById('month-label').value=`${months[prev.getMonth()]} ${prev.getFullYear()}`;
-  document.getElementById('admin-overlay').classList.add('active');
-}
-function closeAdmin(){document.getElementById('admin-overlay').classList.remove('active');}
+                <div class="form-group">
+                    <label>GitHub Personal Token</label>
+                    <input type="password" id="gh-token" class="input-text" placeholder="ghp_***">
+                </div>
 
-async function doLogin(){
-  const pwd=document.getElementById('admin-pwd').value;
-  const hash=await sha256(pwd);
-  if(hash===ADMIN_PWD_HASH){
-    document.getElementById('admin-login').style.display='none';
-    document.getElementById('admin-panel').style.display='block';
-    document.getElementById('login-error').style.display='none';
-    document.getElementById('admin-pwd').value='';
-  } else {
-    document.getElementById('login-error').style.display='block';
-  }
-}
+                <div class="section-label" style="font-size: 10px; color: var(--text3); margin-bottom: 10px; font-family: var(--mono);">ФАЙЛИ (XLSX / CSV)</div>
+                
+                <div class="file-slot" id="slot-banners">
+                    <span>📊 Банери (XLSX)</span>
+                    <input type="file" onchange="handleFile('banners', this)">
+                    <div class="file-name">не вибрано</div>
+                </div>
 
-function onFile(key,input){
-  const f=input.files[0];if(!f) return;
-  FILES[key]=f;FNAMES[key]=f.name;
-  document.getElementById('slot-'+key).classList.add('ok');
-  const s=document.getElementById('sst-'+key);
-  s.textContent='✓ '+(f.name.length>18?f.name.slice(0,18)+'…':f.name);
-}
-function clearFiles(){
-  ['banners','stories','paid','retention'].forEach(k=>{
-    delete FILES[k];delete FNAMES[k];
-    const sl=document.getElementById('slot-'+k);if(sl) sl.classList.remove('ok');
-    const st=document.getElementById('sst-'+k);if(st) st.textContent='Вибрати';
-  });
-  document.getElementById('admin-msg').innerHTML='';
-}
+                <div class="file-slot" id="slot-stories">
+                    <span>📖 Сторіз (XLSX)</span>
+                    <input type="file" onchange="handleFile('stories', this)">
+                    <div class="file-name">не вибрано</div>
+                </div>
 
-function adminMsg(html,type='info'){
-  document.getElementById('admin-msg').innerHTML=`<div class="alert alert-${type}">${html}</div>`;
-}
+                <div class="file-slot" id="slot-paid">
+                    <span>✅ Платні сторіз (CSV)</span>
+                    <input type="file" onchange="handleFile('paid', this)">
+                    <div class="file-name">не вибрано</div>
+                </div>
 
-async function saveAll(){
-  const btn=document.getElementById('save-btn');
-  const token=document.getElementById('gh-token').value.trim();
-  const label=document.getElementById('month-label').value.trim();
-  if(!token){adminMsg('Введіть GitHub Token','error');return;}
-  if(!label){adminMsg('Введіть назву місяця','error');return;}
-  if(!FILES.banners&&!FILES.stories&&!FILES.retention){adminMsg('Завантажте хоча б один файл','error');return;}
-  if(FILES.banners&&!FILES.stories){adminMsg('Потрібен також файл сторіз','error');return;}
-  if(FILES.stories&&!FILES.banners){adminMsg('Потрібен також файл банерів','error');return;}
-  if((FILES.banners||FILES.stories)&&!FILES.paid){adminMsg('Потрібен список платних сторіз (CSV)','error');return;}
+                <div class="file-slot" id="slot-ret">
+                    <span>📨 Ретеншн (CSV)</span>
+                    <input type="file" onchange="handleFile('ret', this)">
+                    <div class="file-name">не вибрано</div>
+                </div>
 
-  localStorage.setItem('rm_gh_token',token);
-  btn.disabled=true;btn.textContent='Обробляємо…';adminMsg('Обробка файлів…','info');
+                <button id="save-btn" class="btn btn-primary" style="width:100%; margin-top: 10px;" onclick="processAndSave()">Зберегти та опублікувати</button>
+            </div>
+        </div>
+    </div>
 
-  try{
-    let instruments=[],bannerCamps=[],storyCamps=[],retention={push:[],email:[],viber:[]};
+    <script>
+        // --- CONFIG ---
+        const GIST_ID = 'cb4ab1fd933e3ea5f4e9cc77318ea208'; 
+        const ADMIN_PWD_HASH = 'a8b54f0a009af61ee42386167e0c23afe766b6fde4c0d19dd0adaa5a481e03d6'; // kasta2026
 
-    if(FILES.banners&&FILES.stories&&FILES.paid){
-      const[bRows,sRows,paidRaw]=await Promise.all([readXls(FILES.banners),readXls(FILES.stories),readTxt(FILES.paid)]);
-      const yrArr=sRows.flatMap(r=>{const d=parseFull(r['Дата']);return d?[d.getFullYear()]:[]});
-      const yr=yrArr.length?yrArr.sort()[Math.floor(yrArr.length/2)]:new Date().getFullYear();
-      const paidEntries=parsePaidCSV(paidRaw,yr);
-      bannerCamps=parseBanners(bRows);
-      storyCamps=parseStories(sRows,paidEntries);
-      instruments=buildStats(bannerCamps);
-      adminMsg(`Банери: ${bannerCamps.length} кампаній, ${instruments.length} інструментів. Сторіз: ${storyCamps.length} кампаній.`,'info');
-    }
+        let STATE = {
+            data: null,
+            currentFiles: {},
+            activeSubTab: 'push'
+        };
 
-    if(FILES.retention){
-      const raw=await readTxt(FILES.retention);
-      retention=parseRetentionCSV(raw);
-      adminMsg(`Ретеншн: пуш ${retention.push.length}, email ${retention.email.length}, viber ${retention.viber.length}.`,'info');
-    }
+        const CAT_MAP = {
+            'main': 'Головна', 'women': 'Жінки', 'men': 'Чоловіки', 'shoes': 'Взуття',
+            'children': 'Діти', 'sport': 'Спорт', 'lingery': 'Білизна', 'home': 'Дім',
+            'ukraine': 'Україна', 'makeup': 'Макіяж', 'accessorize': 'Аксесуари'
+        };
 
-    const now=new Date().toISOString();
-    const record={label,updatedAt:now,instruments,bannerCamps,storyCamps,retention};
+        // --- UTILS ---
+        const fmt = (n, d=0) => n.toLocaleString('uk-UA', { minimumFractionDigits: d, maximumFractionDigits: d });
+        const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(0)+'K' : Math.round(n);
+        const normUrl = u => String(u||'').toLowerCase().replace('/uk/','/ru/').replace(/\/+$/, '').trim();
+        const toNum = v => {
+            if(!v) return 0;
+            return parseFloat(String(v).replace(/\s/g, '').replace(',', '.').replace('%','')) || 0;
+        };
 
-    // Load current gist data, merge
-    let gistData={};
-    try{gistData=await fetchGist();}catch(e){gistData={};}
-    gistData.currentRecord=record;
-    gistData.label=label;
-    gistData.updatedAt=now;
-    // Keep history (optional)
-    if(!gistData.history) gistData.history={};
-    const key=label.toLowerCase().replace(/\s/g,'-');
-    gistData.history[key]=record;
+        const median = arr => {
+            if(!arr.length) return 0;
+            const s = [...arr].sort((a,b) => a-b);
+            const mid = Math.floor(s.length/2);
+            return s.length % 2 !== 0 ? s[mid] : (s[mid-1] + s[mid]) / 2;
+        };
 
-    adminMsg('Зберігаємо до Gist…','info');
-    await saveGist(gistData,token);
+        const percentile = (arr, p) => {
+            if(!arr.length) return 0;
+            const s = [...arr].sort((a,b) => a-b);
+            const pos = (s.length - 1) * p;
+            const base = Math.floor(pos);
+            const rest = pos - base;
+            if(s[base+1] !== undefined) return s[base] + rest * (s[base+1] - s[base]);
+            return s[base];
+        };
 
-    // Update live view
-    DATA=record;
-    renderDashboard();
-    adminMsg(`✓ Збережено! Дані «${label}» доступні на сайті.`,'ok');
-    clearFiles();
-  }catch(e){adminMsg('Помилка: '+e.message,'error');}
-  btn.disabled=false;btn.textContent='💾 Зберегти та опублікувати';
-}
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
 
-// ─── init ────────────────────────────────────────────────────────
-async function init(){
-  document.getElementById('loading').style.display='flex';
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('setup-screen').style.display='none';
+        // --- CORE LOGIC ---
+        async function init() {
+            setLoading(30);
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+                const gist = await res.json();
+                STATE.data = JSON.parse(gist.files['retail-media.json'].content).currentRecord;
+                renderAll();
+            } catch(e) {
+                console.error(e);
+                document.body.innerHTML += `<div class="empty">Помилка завантаження даних. Перевірте GIST_ID.</div>`;
+            }
+            setLoading(100);
+        }
 
-  if(!GIST_ID||GIST_ID==='YOUR_GIST_ID_HERE'){
-    document.getElementById('loading').style.display='none';
-    document.getElementById('setup-screen').style.display='block';
-    return;
-  }
+        function renderAll() {
+            if(!STATE.data) return;
+            const d = STATE.data;
+            document.getElementById('date-label').innerText = `Оновлено: ${new Date(d.updatedAt).toLocaleDateString()} | ${d.label}`;
+            
+            // Summary
+            const pushSent = d.retention.push.reduce((a,b)=>a+b.total.sent, 0);
+            document.getElementById('summary').innerHTML = `
+                <div class="sum-item"><div class="sum-label">Банери</div><div class="sum-val">${d.bannerCamps.length}</div></div>
+                <div class="sum-item"><div class="sum-label">Сторіз</div><div class="sum-val">${d.storyCamps.length}</div></div>
+                <div class="sum-item"><div class="sum-label">Сер. Охоплення</div><div class="sum-val">${fmtK(median(d.bannerCamps.map(c=>c.imp)))}</div></div>
+                <div class="sum-item"><div class="sum-label">Пуш-розсилки</div><div class="sum-val">${fmtK(pushSent)}</div></div>
+            `;
 
-  try{
-    const gistData=await fetchGist();
-    DATA=gistData.currentRecord||null;
-    document.getElementById('loading').style.display='none';
-    document.getElementById('dashboard').style.display='block';
-    if(DATA) renderDashboard();
-    else {
-      // Empty state
-      document.getElementById('month-badge').textContent='Даних немає';
-      document.getElementById('panel-banners').innerHTML=`<div class="empty"><div class="empty-icon">📊</div>Дані ще не завантажені.<br>Натисніть ⚙ Адмін для завантаження.</div>`;
-      document.getElementById('panel-stories').innerHTML=`<div class="empty"><div class="empty-icon">📖</div>Дані ще не завантажені.</div>`;
-      document.getElementById('panel-retention').innerHTML=`<div class="empty"><div class="empty-icon">📨</div>Дані ще не завантажені.</div>`;
-    }
-  }catch(e){
-    document.getElementById('loading').style.display='none';
-    document.getElementById('dashboard').style.display='block';
-    document.getElementById('panel-banners').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div>${esc(e.message)}</div>`;
-  }
-}
+            // Filters
+            const cats = [...new Set(d.bannerCamps.map(c=>c.tag))];
+            const sel = document.getElementById('cat-filter');
+            const calcSel = document.getElementById('calc-cat');
+            cats.forEach(c => {
+                const opt = `<option value="${c}">${CAT_MAP[c] || c}</option>`;
+                sel.innerHTML += opt;
+                calcSel.innerHTML += opt;
+            });
 
-init();
-</script>
+            renderBanners();
+            renderStories();
+            renderRetention();
+            initCalc();
+        }
+
+        function renderBanners() {
+            const cat = document.getElementById('cat-filter').value;
+            const d = STATE.data;
+            
+            let filteredCamps = d.bannerCamps;
+            if(cat !== 'all') filteredCamps = filteredCamps.filter(c => c.tag === cat);
+
+            // Re-aggregate instruments based on filter
+            const groups = {};
+            filteredCamps.forEach(c => {
+                if(!groups[c.instrument]) groups[c.instrument] = [];
+                groups[c.instrument].push(c);
+            });
+
+            const maxN = Math.max(...Object.values(groups).map(g => g.length));
+            const insts = Object.entries(groups).map(([name, camps]) => {
+                const ctrs = camps.map(c => c.CTR);
+                const convs = camps.map(c => c.Conv);
+                const imps = camps.map(c => c.imp);
+                const medCTR = median(ctrs);
+                const medConv = median(convs);
+                const avgImp = camps.reduce((a,b)=>a+b.imp,0) / camps.length;
+                
+                const purchPerC = (medCTR/100) * (medConv/100) * avgImp;
+                const conf = Math.log(camps.length + 1) / Math.log(maxN + 1);
+                return {
+                    name, n: camps.length,
+                    medCTR, medConv, avgImp, purchPerC,
+                    score: purchPerC * conf
+                };
+            }).sort((a,b) => b.score - a.score);
+
+            const maxScore = Math.max(...insts.map(i => i.score)) || 1;
+            
+            let html = '';
+            insts.forEach((inst, i) => {
+                const finalScore = Math.round((inst.score / maxScore) * 100);
+                const tier = finalScore > 70 ? 'pill-top' : finalScore > 30 ? 'pill-mid' : 'pill-low';
+                const label = finalScore > 70 ? 'Топ' : finalScore > 30 ? 'Середній' : 'Слабкий';
+
+                html += `
+                <div class="r-card">
+                    <div class="r-num ${i<3?'top':''}">${i+1}</div>
+                    <div class="r-main">
+                        <div class="r-title">${inst.name} <span class="pill ${tier}">${label}</span> ${inst.n < 4 ? '⚠️' : ''}</div>
+                        <div class="r-metrics">
+                            <div class="m-item">CTR: <b>${inst.medCTR.toFixed(3)}%</b></div>
+                            <div class="m-item">Конв: <b>${inst.medConv.toFixed(2)}%</b></div>
+                            <div class="m-item">Покупок/камп: <b>${inst.purchPerC.toFixed(1)}</b></div>
+                            <div class="m-item">N: <b>${inst.n}</b></div>
+                        </div>
+                    </div>
+                    <div class="r-score-wrap">
+                        <div class="r-score">${finalScore}</div>
+                        <div style="font-size:9px; color:var(--text3); font-family:var(--mono)">SCORE</div>
+                    </div>
+                    <div class="r-bar"><div class="r-fill" style="width:${finalScore}%"></div></div>
+                </div>`;
+            });
+            document.getElementById('rating-list').innerHTML = html;
+
+            // Table
+            let tHtml = '';
+            [...filteredCamps].sort((a,b) => b.imp - a.imp).forEach(c => {
+                tHtml += `<tr>
+                    <td class="text-white">${c.title}</td>
+                    <td>${c.instrument}</td>
+                    <td>${fmt(c.imp)}</td>
+                    <td>${fmt(c.clicks)}</td>
+                    <td>${fmt(c.purch)}</td>
+                    <td style="color:${c.CTR > 1 ? 'var(--green)' : ''}">${c.CTR.toFixed(3)}%</td>
+                    <td>${c.Conv.toFixed(2)}%</td>
+                    <td>${c.days}</td>
+                </tr>`;
+            });
+            document.getElementById('tbl-banners').querySelector('tbody').innerHTML = tHtml;
+        }
+
+        function renderStories() {
+            const d = STATE.data;
+            if(!d.storyCamps.length) return;
+
+            const medCTR = median(d.storyCamps.map(c => c.CTR));
+            const medConv = median(d.storyCamps.map(c => c.Conv));
+
+            document.getElementById('story-stats').innerHTML = `
+                <div class="summary" style="grid-template-columns: 1fr 1fr">
+                    <div class="sum-item"><div class="sum-label">Медіана CTR Сторіз</div><div class="sum-val">${medCTR.toFixed(2)}%</div></div>
+                    <div class="sum-item"><div class="sum-label">Медіана Конверсії</div><div class="sum-val">${medConv.toFixed(2)}%</div></div>
+                </div>
+            `;
+
+            let html = '';
+            [...d.storyCamps].sort((a,b) => b.imp - a.imp).forEach(c => {
+                html += `<tr>
+                    <td class="text-white">${c.title}</td>
+                    <td>${fmt(c.imp)}</td>
+                    <td>${fmt(c.clicks)}</td>
+                    <td>${fmt(c.purch)}</td>
+                    <td>${c.CTR.toFixed(3)}%</td>
+                    <td>${c.Conv.toFixed(2)}%</td>
+                </tr>`;
+            });
+            document.getElementById('tbl-stories').querySelector('tbody').innerHTML = html;
+        }
+
+        function renderRetention() {
+            const d = STATE.data.retention;
+            const type = STATE.activeSubTab;
+            let html = '';
+
+            if(type === 'push') {
+                html = `<div class="table-wrap"><table><thead><tr>
+                    <th>Кампанія</th><th>Відправлено</th><th>Доставлено</th><th>%</th><th>Open</th><th>OR</th><th>CR</th>
+                </tr></thead><tbody>`;
+                d.push.forEach(c => {
+                    html += `<tr>
+                        <td class="text-white">${c.segment}</td>
+                        <td>${fmtK(c.total.sent)}</td><td>${fmtK(c.total.del)}</td>
+                        <td>${(c.total.del/c.total.sent*100).toFixed(1)}%</td>
+                        <td>${fmtK(c.total.opens)}</td>
+                        <td>${c.openRate.toFixed(2)}%</td>
+                        <td>${c.clickRate.toFixed(2)}%</td>
+                    </tr>
+                    <tr class="sub-row"><td>↳ Android</td><td>${fmtK(c.and.sent)}</td><td>${fmtK(c.and.del)}</td><td></td><td>${fmtK(c.and.opens)}</td><td>${(c.and.opens/c.and.del*100||0).toFixed(2)}%</td><td>${(c.and.clicks/c.and.del*100||0).toFixed(2)}%</td></tr>
+                    <tr class="sub-row"><td>↳ iOS</td><td>${fmtK(c.ios.sent)}</td><td>${fmtK(c.ios.del)}</td><td></td><td>${fmtK(c.ios.opens)}</td><td>${(c.ios.opens/c.ios.del*100||0).toFixed(2)}%</td><td>${(c.ios.clicks/c.ios.del*100||0).toFixed(2)}%</td></tr>
+                    `;
+                });
+                html += `</tbody></table></div>`;
+            } else if (type === 'email') {
+                html = `<div class="table-wrap"><table><thead><tr><th>Тема / Сегмент</th><th>Відправлено</th><th>OR</th><th>CR</th></tr></thead><tbody>`;
+                d.email.forEach(c => {
+                    html += `<tr>
+                        <td class="text-white">${c.segment}</td>
+                        <td>${fmtK(c.sent)}</td>
+                        <td style="color:${c.openRate>=30?'var(--green)':''}">${c.openRate.toFixed(1)}%</td>
+                        <td>${c.clickRate.toFixed(2)}%</td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            } else {
+                html = `<div class="table-wrap"><table><thead><tr><th>Сегмент</th><th>Доставлено</th><th>Кліків</th><th>CR</th></tr></thead><tbody>`;
+                d.viber.forEach(c => {
+                    html += `<tr>
+                        <td class="text-white">${c.segment}</td>
+                        <td>${fmtK(c.del)}</td>
+                        <td>${fmtK(c.clicks)}</td>
+                        <td style="color:${c.clickRate>=3?'var(--green)':''}">${c.clickRate.toFixed(2)}%</td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+            document.getElementById('ret-content').innerHTML = html;
+        }
+
+        // --- CALCULATOR ---
+        function initCalc() {
+            const insts = [...new Set(STATE.data.bannerCamps.map(c => c.instrument))];
+            const sel = document.getElementById('calc-inst');
+            const checkList = document.getElementById('calc-check-list');
+            
+            insts.forEach(ins => {
+                sel.innerHTML += `<option value="${ins}">${ins}</option>`;
+                checkList.innerHTML += `
+                    <label class="check-item">
+                        <input type="checkbox" value="${ins}" onchange="runCalc()"> ${ins}
+                    </label>
+                `;
+            });
+            runCalc();
+        }
+
+        function runCalc() {
+            const mode = document.getElementById('calc-mode').value;
+            const days = parseInt(document.getElementById('calc-days').value);
+            const cat = document.getElementById('calc-cat').value;
+            
+            let selectedNames = [];
+            if(mode === 'single') selectedNames = [document.getElementById('calc-inst').value];
+            else {
+                selectedNames = Array.from(document.querySelectorAll('#calc-check-list input:checked')).map(i => i.value);
+            }
+
+            if(!selectedNames.length) { resetCalc(); return; }
+
+            let totalImp = 0, totalClicks = 0, totalPurch = 0;
+            let p25Clicks = 0, p75Clicks = 0, p25Purch = 0, p75Purch = 0;
+            let reliability = [];
+
+            selectedNames.forEach(name => {
+                let camps = STATE.data.bannerCamps.filter(c => c.instrument === name);
+                if(cat !== 'all') {
+                    const catCamps = camps.filter(c => c.tag === cat);
+                    if(catCamps.length >= 3) camps = catCamps;
+                }
+
+                const ctrs = camps.map(c => c.CTR);
+                const convs = camps.map(c => c.Conv);
+                const medCTR = median(ctrs);
+                const medConv = median(convs);
+                const medImpPerDay = median(camps.map(c => c.imp / c.days));
+
+                // Decay calculation: sum of medImpPerDay * (medCTR * 0.95^day)
+                let instClicks = 0, instP25Clicks = 0, instP75Clicks = 0;
+                const p25CTR = percentile(ctrs, 0.25);
+                const p75CTR = percentile(ctrs, 0.75);
+
+                for(let d=0; d<days; d++) {
+                    const decay = Math.pow(0.95, d);
+                    const dailyImp = medImpPerDay; 
+                    totalImp += dailyImp;
+                    instClicks += dailyImp * (medCTR/100) * decay;
+                    instP25Clicks += dailyImp * (p25CTR/100) * decay;
+                    instP75Clicks += dailyImp * (p75CTR/100) * decay;
+                }
+
+                totalClicks += instClicks;
+                p25Clicks += instP25Clicks;
+                p75Clicks += instP75Clicks;
+                
+                totalPurch += instClicks * (medConv/100);
+                p25Purch += instClicks * (percentile(convs, 0.25)/100);
+                p75Purch += instClicks * (percentile(convs, 0.75)/100);
+
+                reliability.push(camps.length);
+            });
+
+            // Synergy
+            let synergy = 1.0;
+            if(selectedNames.length === 2) synergy = 1.15;
+            else if(selectedNames.length === 3) synergy = 1.25;
+            else if(selectedNames.length >= 4) synergy = 1.30;
+
+            const hasStory = STATE.data.storyCamps.some(s => selectedNames.includes(s.title)); // simplified check
+            if(hasStory) synergy += 0.05;
+
+            totalClicks *= synergy; p25Clicks *= synergy; p75Clicks *= synergy;
+            totalPurch *= synergy; p25Purch *= synergy; p75Purch *= synergy;
+
+            document.getElementById('res-imp').innerText = fmtK(totalImp);
+            document.getElementById('res-clicks').innerText = fmt(totalClicks);
+            document.getElementById('res-clicks-range').innerText = `${fmt(p25Clicks)} - ${fmt(p75Clicks)}`;
+            document.getElementById('res-purch').innerText = Math.round(totalPurch);
+            document.getElementById('res-purch-range').innerText = `діапазон: ${Math.round(p25Purch)} - ${Math.round(p75Purch)}`;
+            
+            const synBadge = document.getElementById('res-synergy');
+            if(synergy > 1) {
+                synBadge.style.display = 'block';
+                synBadge.innerText = `Синергія пакету: +${Math.round((synergy-1)*100)}%`;
+            } else synBadge.style.display = 'none';
+
+            const minN = Math.min(...reliability);
+            const relEl = document.getElementById('res-reliability');
+            if(minN >= 10) relEl.innerHTML = `<span style="color:var(--green)">● Надійний прогноз (N≥10)</span>`;
+            else if(minN >= 4) relEl.innerHTML = `<span style="color:var(--amber)">● Середня надійність (N ${minN})</span>`;
+            else relEl.innerHTML = `<span style="color:var(--red)">● Низька надійність (N < 4)</span>`;
+        }
+
+        function resetCalc() {
+            ['res-imp','res-clicks','res-purch'].forEach(id => document.getElementById(id).innerText = '0');
+            document.getElementById('res-clicks-range').innerText = '0 - 0';
+            document.getElementById('res-purch-range').innerText = 'діапазон: 0 - 0';
+            document.getElementById('res-synergy').style.display = 'none';
+        }
+
+        // --- ADMIN & PARSING ---
+        function handleFile(key, input) {
+            const file = input.files[0];
+            if(file) {
+                STATE.currentFiles[key] = file;
+                const slot = document.getElementById('slot-'+key);
+                slot.classList.add('ok');
+                slot.querySelector('.file-name').innerText = file.name;
+            }
+        }
+
+        async function processAndSave() {
+            const btn = document.getElementById('save-btn');
+            const token = document.getElementById('gh-token').value;
+            const label = document.getElementById('month-name').value;
+            
+            if(!token || !label) return alert("Вкажіть токен та назву місяця");
+            
+            btn.disabled = true;
+            btn.innerText = "Обробка...";
+            setLoading(20);
+
+            try {
+                const files = STATE.currentFiles;
+                
+                // 1. Paid CSV
+                const paidRaw = await readFile(files.paid, 'text');
+                const paidData = parsePaidCSV(paidRaw);
+                
+                // 2. Banners XLSX
+                const bannerRows = await readFile(files.banners, 'xlsx');
+                const bannerCamps = parseBanners(bannerRows);
+                
+                // 3. Stories XLSX
+                const storyRows = await readFile(files.stories, 'xlsx');
+                const storyCamps = parseStories(storyRows, paidData);
+                
+                // 4. Retention CSV
+                const retRaw = await readFile(files.ret, 'text');
+                const retention = parseRetention(retRaw);
+
+                const record = {
+                    label,
+                    updatedAt: new Date().toISOString(),
+                    bannerCamps,
+                    storyCamps,
+                    retention
+                };
+
+                // Save to Gist
+                setLoading(70);
+                const gistRes = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `token ${token}` },
+                    body: JSON.stringify({
+                        files: { "retail-media.json": { content: JSON.stringify({ currentRecord: record }) } }
+                    })
+                });
+
+                if(gistRes.ok) {
+                    alert("Дані успішно оновлено!");
+                    location.reload();
+                } else {
+                    const err = await gistRes.json();
+                    alert("Помилка GitHub: " + err.message);
+                }
+
+            } catch(e) {
+                console.error(e);
+                alert("Помилка при обробці: " + e.message);
+            }
+            btn.disabled = false;
+            btn.innerText = "Зберегти та опублікувати";
+            setLoading(100);
+        }
+
+        function parseBanners(rows) {
+            const result = [];
+            rows.forEach(r => {
+                const title = String(r['Title'] || '');
+                if(!title.toLowerCase().includes('рітейл')) return;
+
+                const tags = String(r['Tags'] || 'main').split(',').map(t => t.trim());
+                tags.forEach(tag => {
+                    if(tag.startsWith('landing-sale')) return;
+                    result.push({
+                        title,
+                        tag: tag || 'main',
+                        instrument: `Банер ${CAT_MAP[tag] || tag} — ${r['Placement']}`,
+                        imp: toNum(r['Sessions with impressions']),
+                        clicks: toNum(r['Sessions with click']),
+                        purch: toNum(r['Sessions with purchase']),
+                        CTR: (toNum(r['Sessions with click']) / toNum(r['Sessions with impressions']) * 100) || 0,
+                        Conv: (toNum(r['Sessions with purchase']) / toNum(r['Sessions with click']) * 100) || 0,
+                        days: 1 // simplified, usually unique dates count
+                    });
+                });
+            });
+            // Aggregate same campaigns
+            const map = {};
+            result.forEach(c => {
+                const key = c.title + c.tag + c.instrument;
+                if(!map[key]) map[key] = {...c, days: 0};
+                map[key].imp += c.imp; map[key].clicks += c.clicks; map[key].purch += c.purch;
+                map[key].days += 1;
+            });
+            return Object.values(map).map(c => ({
+                ...c,
+                CTR: (c.clicks / c.imp * 100) || 0,
+                Conv: (c.clicks > 0 ? c.purch / c.clicks * 100 : 0)
+            }));
+        }
+
+        function parsePaidCSV(raw) {
+            const lines = raw.split('\n').filter(l => l.trim());
+            const sep = lines[0].includes(';') ? ';' : ',';
+            return lines.map(l => {
+                const p = l.split(sep).map(s => s.trim().replace(/^"|"$/g, ''));
+                return { brand: p[0], start: new Date(p[3]), end: new Date(p[2]), url: normUrl(p[4]) };
+            });
+        }
+
+        function parseStories(rows, paid) {
+            const camps = {};
+            rows.forEach(r => {
+                const url = normUrl(r['ID.1']);
+                const date = new Date(r['Дата']);
+                const match = paid.find(p => p.url === url && date >= p.start && date <= p.end);
+                if(!match) return;
+
+                const key = match.brand + url;
+                if(!camps[key]) camps[key] = { title: match.brand, imp:0, clicks:0, purch:0 };
+                camps[key].imp += toNum(r['Sessions with impressions']);
+                camps[key].clicks += toNum(r['Sessions with click']);
+                camps[key].purch += toNum(r['Sessions with purchase']);
+            });
+            return Object.values(camps).map(c => ({
+                ...c,
+                CTR: (c.clicks / c.imp * 100) || 0,
+                Conv: (c.clicks > 0 ? c.purch / c.clicks * 100 : 0)
+            }));
+        }
+
+        function parseRetention(raw) {
+            const lines = raw.split('\n').filter(l => l.trim());
+            const data = [];
+            let lastDate = '';
+            lines.slice(1).forEach(l => {
+                const p = l.split(';').map(s => s.trim());
+                const date = p[0] || lastDate;
+                lastDate = date;
+                data.push({
+                    type: p[1],
+                    segment: p[2],
+                    sent: toNum(p[3]), del: toNum(p[4]), opens: toNum(p[5]), clicks: toNum(p[6])
+                });
+            });
+
+            const pushMap = {};
+            data.filter(r => r.type === 'mobilepush').forEach(r => {
+                const base = r.segment.replace('_and]', ']').replace('_ios]', ']');
+                if(!pushMap[base]) pushMap[base] = { segment: base, and: {sent:0,del:0,opens:0,clicks:0}, ios: {sent:0,del:0,opens:0,clicks:0} };
+                const platform = r.segment.includes('_and]') ? 'and' : 'ios';
+                pushMap[base][platform].sent += r.sent;
+                pushMap[base][platform].del += r.del;
+                pushMap[base][platform].opens += r.opens;
+                pushMap[base][platform].clicks += r.clicks;
+            });
+
+            return {
+                push: Object.values(pushMap).map(c => ({
+                    ...c,
+                    total: { sent: c.and.sent+c.ios.sent, del: c.and.del+c.ios.del, opens: c.and.opens+c.ios.opens, clicks: c.and.clicks+c.ios.clicks },
+                    openRate: ((c.and.opens+c.ios.opens)/(c.and.del+c.ios.del)*100)||0,
+                    clickRate: ((c.and.clicks+c.ios.clicks)/(c.and.del+c.ios.del)*100)||0
+                })),
+                email: data.filter(r => r.type === 'email').map(r => ({ ...r, openRate: (r.opens/r.del*100)||0, clickRate: (r.clicks/r.del*100)||0 })),
+                viber: data.filter(r => r.type === 'viber').map(r => ({ ...r, clickRate: (r.clicks/r.del*100)||0 }))
+            };
+        }
+
+        function readFile(file, type) {
+            return new Promise((res) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if(type === 'xlsx') {
+                        const wb = XLSX.read(e.target.result, { type: 'array' });
+                        res(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+                    } else res(e.target.result);
+                };
+                if(type === 'xlsx') reader.readAsArrayBuffer(file);
+                else reader.readAsText(file);
+            });
+        }
+
+        // --- UI HELPERS ---
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('panel-' + id).classList.add('active');
+        }
+
+        function switchSubTab(id, btn) {
+            STATE.activeSubTab = id;
+            const container = btn.parentElement;
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderRetention();
+        }
+
+        function toggleAdmin(show) {
+            document.getElementById('admin-overlay').classList.toggle('active', show);
+        }
+
+        async function adminAuth() {
+            const pass = document.getElementById('admin-pass').value;
+            const hash = await sha256(pass);
+            if(hash === ADMIN_PWD_HASH) {
+                document.getElementById('admin-login-view').style.display = 'none';
+                document.getElementById('admin-panel-view').style.display = 'block';
+                const savedToken = localStorage.getItem('gh_token');
+                if(savedToken) document.getElementById('gh-token').value = savedToken;
+            } else alert("Невірний пароль");
+        }
+
+        function toggleCalcMode() {
+            const mode = document.getElementById('calc-mode').value;
+            document.getElementById('calc-single-field').style.display = mode === 'single' ? 'block' : 'none';
+            document.getElementById('calc-multi-field').style.display = mode === 'multi' ? 'block' : 'none';
+            runCalc();
+        }
+
+        function setLoading(p) {
+            document.getElementById('loading-bar').style.width = p + '%';
+            if(p === 100) setTimeout(() => document.getElementById('loading-bar').style.width = '0', 500);
+        }
+
+        init();
+    </script>
 </body>
 </html>
